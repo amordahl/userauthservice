@@ -12,7 +12,7 @@ class Client(
     validationService: ValidationService
 ):
 
-  private def insertIntoDatabase(email: String): IO[Unit] =
+  private[client] def insertIntoDatabase(email: String): IO[Unit] =
     for
       _ <- IO.println("Email validated! Adding to database.")
       _ <- IO.pure(addToDatabase(email)).flatMap:
@@ -26,12 +26,15 @@ class Client(
     for
       _     <- IO.print("email> ")
       email <- IO.readLine
-      _ <- IO.pure(validateEmail(email)).flatMap:
-        case true => insertIntoDatabase(email)
-        case false =>
-          for
-            _ <- IO.println("Email could not be validated.")
-          yield ()
+      _ <- validateEmail(email).flatMap:
+        case ValidationStatus.Valid =>
+          insertIntoDatabase(email)
+        case ValidationStatus.InvalidConstruction =>
+          IO.println("Email address is not valid!")
+        case ValidationStatus.InvalidDomain =>
+          IO.println("Email domain is not acceptable!")
+        case ValidationStatus.ConnectionError =>
+          IO.println("Could not connect to validation service!")
     yield ()
 
   private def help: IO[Unit] =
@@ -42,10 +45,10 @@ class Client(
       _ <- IO.println("| read:   Get all emails from the database")
     yield ()
 
-  private def read: IO[Unit] =
-    for
-      _ <- IO.println("Not yet implemented")
-    yield ()
+  private[client] def read: IO[String] =
+    val emails = Await.result(emailDbManager.getAllEmails, 5.seconds)
+    IO.pure(emails.mkString("-", "\n-", ""))
+  end read
 
   private def mainPrompt: IO[Unit] =
     for
@@ -53,7 +56,11 @@ class Client(
       _ <- IO.readLine.flatMap:
         case "help"   => help
         case "insert" => emailPrompt
-        case "read"   => read
+        case "read" =>
+          for
+            s <- read
+            _ <- IO.println(s)
+          yield ()
         case _ =>
           for
             _ <- IO.println("Invalid response! Try again")
@@ -61,11 +68,12 @@ class Client(
           yield ()
     yield ()
 
-  private def validateEmail(email: String): Boolean = true
+  private def validateEmail(email: String): IO[ValidationStatus] =
+    IO.pure(validationService.validate(email))
 
-  private def addToDatabase(email: String): Boolean =
+  private def addToDatabase(email: String): IO[Boolean] =
     val f = emailDbManager.insertEmail(email)
-    Await.result(f.map(_ => true).recover(_ => false), 2.seconds)
+    IO.pure(Await.result(f.map(_ => true).recover(_ => false), 2.seconds))
 
   def main() =
     def loop: IO[Unit] =

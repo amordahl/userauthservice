@@ -1,13 +1,31 @@
 package edu.uic.client
 
-import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
+import org.checkerframework.checker.units.qual.s
 
-final class ValidationService():
+enum ValidationStatus:
+  case Valid, InvalidConstruction, InvalidDomain, ConnectionError
 
-  def validate(email: String): Boolean =
-    val validator = sys.env.getOrElse("VALIDATOR", "http://localhost:8080")
-    println(s"Using validator service at $validator")
-    val response = requests.post(s"$validator/validate", data = email)
-    response.statusCode == 200
+class ValidationService():
+  def validate(email: String): ValidationStatus =
+    val validator =
+      sys.env.getOrElse("VALIDATION_SERVICE", "localhost")
+    try
+      val r = requests.post(s"http://$validator:8080/validate", data = email)
+      if ujson.read(r.text())("status").str == "OK" then ValidationStatus.Valid
+      else
+        if ujson.read(
+            r.text()
+          )("reason").str == "Unacceptable domain"
+        then
+          ValidationStatus.InvalidDomain
+        else
+          ValidationStatus.InvalidConstruction
+      end if
+    catch
+      case e: Exception =>
+        System.err.println(s"Validation request failed: ${e.getMessage}")
+        ValidationStatus.ConnectionError
+    end try
   end validate
 end ValidationService

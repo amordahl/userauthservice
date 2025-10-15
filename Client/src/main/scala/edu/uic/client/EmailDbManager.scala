@@ -4,18 +4,17 @@ import scala.concurrent.Future
 import slick.jdbc.PostgresProfile.api.*
 import slick.lifted.ProvenShape
 
-final class EmailDbManager(db: Database):
+case class EmailRecord(id: Option[Int], email: String)
+
+class EmailDbManager(db: Database):
   type Email = String
 
-  case class EmailRecord(id: Option[Int], email: Email)
   case class Emails(tag: Tag) extends Table[EmailRecord](tag, "emails"):
     def id    = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def email = column[String]("email", O.Unique)
     def *     = (id.?, email).mapTo[EmailRecord]
 
-  val emailTable  = TableQuery[Emails]
-  val createQuery = emailTable.schema.createIfNotExists
-  db.run(createQuery.transactionally): Unit
+  val emailTable = TableQuery[Emails]
 
   def getAllEmails: Future[Seq[EmailRecord]] =
     val query = emailTable.result

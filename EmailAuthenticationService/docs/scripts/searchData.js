@@ -1,0 +1,12 @@
+pages = [{"l":"index.html#","e":false,"i":"","n":"EmailAuthenticationService","t":"EmailAuthenticationService","d":"","k":"static","x":""},
+{"l":"$lessempty$greater$/AuthService$.html#","e":false,"i":"","n":"AuthService","t":"AuthService extends MainRoutes","d":"","k":"object","x":""},
+{"l":"$lessempty$greater$/AuthService$.html#Domain-0","e":false,"i":"","n":"Domain","t":"Domain = String","d":"AuthService","k":"type","x":""},
+{"l":"$lessempty$greater$/AuthService$.html#Local-0","e":false,"i":"","n":"Local","t":"Local = String","d":"AuthService","k":"type","x":""},
+{"l":"$lessempty$greater$/AuthService$.html#healthEndpoint-fffff73e","e":false,"i":"","n":"healthEndpoint","t":"healthEndpoint(): Response[String]","d":"AuthService","k":"def","x":""},
+{"l":"$lessempty$greater$/AuthService$.html#rootReply-665","e":false,"i":"","n":"rootReply","t":"rootReply(): String","d":"AuthService","k":"def","x":""},
+{"l":"$lessempty$greater$/AuthService$.html#validateEndpoint-fffff20c","e":false,"i":"","n":"validateEndpoint","t":"validateEndpoint(email: Request): Response[String]","d":"AuthService","k":"def","x":""},
+{"l":"$lessempty$greater$/AuthService$.html#validateHelper-4b9","e":false,"i":"","n":"validateHelper","t":"validateHelper(email: String): Response[String]","d":"AuthService","k":"def","x":""},
+{"l":"$lessempty$greater$/AuthService$.html#validateJsonEndpoint-4b9","e":false,"i":"","n":"validateJsonEndpoint","t":"validateJsonEndpoint(email: String): Response[String]","d":"AuthService","k":"def","x":""},
+{"l":"$lessempty$greater$/AuthService$$ValidationFailures.html#","e":false,"i":"","n":"ValidationFailures","t":"ValidationFailures","d":"AuthService","k":"enum","x":""},
+{"l":"$lessempty$greater$/AuthService$$ValidationFailures.html#CouldNotParse-0","e":false,"i":"","n":"CouldNotParse","t":"CouldNotParse extends ValidationFailures","d":"AuthService.ValidationFailures","k":"val","x":""},
+{"l":"$lessempty$greater$/AuthService$$ValidationFailures.html#UnacceptableDomain-0","e":false,"i":"","n":"UnacceptableDomain","t":"UnacceptableDomain extends ValidationFailures","d":"AuthService.ValidationFailures","k":"val","x":""}];

@@ -49,6 +49,7 @@ object AuthService extends cask.MainRoutes:
       case Right((local, domain)) =>
         cask.Response(
           write(Map(
+            "status" -> "OK",
             "local"  -> local,
             "domain" -> domain
           )),
@@ -63,7 +64,7 @@ object AuthService extends cask.MainRoutes:
             Map("status" -> "FAILED", "reason" -> "Unacceptable domain")
         cask.Response(
           write(response),
-          statusCode = 400,
+          statusCode = 200,
           headers = Seq(("Content-Type", "application/json"))
         )
 
@@ -83,5 +84,7 @@ object AuthService extends cask.MainRoutes:
       headers = Seq(("Content-Type", "application/json"))
     )
 
+  override def host: String = "0.0.0.0"
+  println("Starting auth service...")
   initialize()
 end AuthService

@@ -1,0 +1,29 @@
+services:
+  client:
+    build: ./Client
+    environment:
+      - DATABASE_URL=jdbc:postgresql://db:5432/emails
+      - DATABASE_USER=user
+      - DATABASE_PASSWORD=password
+      - VALIDATION_SERVICE=validator
+    depends_on:
+      - db
+
+  validator:
+    build: ./EmailAuthenticationService
+    ports:
+      - "8080:8080"
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=emails
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  cache:
+    image: redis:7
+
+volumes:
+  db-data:

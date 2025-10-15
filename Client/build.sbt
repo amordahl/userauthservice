@@ -23,26 +23,14 @@ val commonSettings = Seq(
 
 lazy val root = project
   .in(file("."))
-  .aggregate(emailAuth, client)
-
-lazy val client = project
-  .in(file("Client"))
   .enablePlugins(JavaAppPackaging)
   .settings(
+    name    := "Client",
+    version := "0.1.0-SNAPSHOT",
     commonSettings,
     libraryDependencies += "org.typelevel"      %% "cats-effect"    % "3.6.3",
     libraryDependencies += "com.lihaoyi"        %% "requests"       % "0.9.0",
     libraryDependencies += "com.typesafe.slick" %% "slick"          % "3.6.1",
     libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % "3.6.1",
     libraryDependencies += "org.postgresql"      % "postgresql"     % "42.6.0"
-  )
-
-lazy val emailAuth = project
-  .in(file("EmailAuthenticationService"))
-  .enablePlugins(JavaServerAppPackaging)
-  .settings(
-    name    := "EmailAuthenticationService",
-    version := "0.1.0-SNAPSHOT",
-    commonSettings,
-    libraryDependencies += "com.lihaoyi" %% "cask" % "0.9.7"
   )

@@ -15,7 +15,7 @@ class Client(
   private[client] def insertIntoDatabase(email: String): IO[Unit] =
     for
       _ <- IO.println("Email validated! Adding to database.")
-      _ <- IO.pure(addToDatabase(email)).flatMap:
+      _ <- addToDatabase(email).flatMap:
         case true =>
           IO.println("Email successfully added to database!")
         case false =>
@@ -47,7 +47,7 @@ class Client(
 
   private[client] def read: IO[String] =
     val emails = Await.result(emailDbManager.getAllEmails, 5.seconds)
-    IO.pure(emails.mkString("-", "\n-", ""))
+    IO.pure(emails.map(a => a.email).mkString("-", "\n-", ""))
   end read
 
   private def mainPrompt: IO[Unit] =
@@ -71,7 +71,7 @@ class Client(
   private def validateEmail(email: String): IO[ValidationStatus] =
     IO.pure(validationService.validate(email))
 
-  private def addToDatabase(email: String): IO[Boolean] =
+  private[client] def addToDatabase(email: String): IO[Boolean] =
     val f = emailDbManager.insertEmail(email)
     IO.pure(Await.result(f.map(_ => true).recover(_ => false), 2.seconds))
 

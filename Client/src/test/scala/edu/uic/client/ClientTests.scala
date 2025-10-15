@@ -1,13 +1,14 @@
 package edu.uic.client
 
-import munit.FunSuite
 import org.scalamock.stubs.*
 import scala.concurrent.Future
 import cats.effect.IO
+import utest.*
+import cats.effect.unsafe.implicits.global
 
 class ClientTests extends utest.TestSuite, Stubs:
 
-  val tests = Tests(
+  val tests = Tests:
     // Pattern 1: Testing IO[String] - use unsafeRunSync() to extract the value
     test("read returns formatted email list from database"):
       // Arrange - Create stubs
@@ -27,7 +28,11 @@ class ClientTests extends utest.TestSuite, Stubs:
       val result: String = client.read.unsafeRunSync()
 
       // Assert
-      assertEquals(result, expected)
+      assertGoldenLiteral(
+        result,
+        """-amordahl@uic.edu
+        |-austin@outlook.com""".stripMargin
+      )
 
     test("read returns empty list when database is empty"):
       // Arrange
@@ -40,31 +45,26 @@ class ClientTests extends utest.TestSuite, Stubs:
       val result = client.read.unsafeRunSync()
 
       // Assert
-      assertEquals(result, "-")
+      assertGoldenLiteral(result, ())
 
-    // Pattern 2: Testing IO[Unit] - verify side effects through stubs
-    test("insertIntoDatabase calls database manager when email is valid"):
+    /* Pattern 2: Testing IO[Boolean] - verify database insertion without
+     * console output */
+    test("addToDatabase calls database manager when email is valid"):
       // Arrange
       val dbStub = stub[EmailDbManager]
       dbStub.insertEmail.returns:
         case "test@gmail.com" => Future.successful(1)
-        case _                => Future.failed(new Exception("Unexpected email"))
+        case _ => Future.failed(new Exception("Unexpected email"))
       val validatorStub = stub[ValidationService]
       val client        = Client(dbStub, validatorStub)
 
-      /* Act - Now we can call insertIntoDatabase directly since it's
-      * package-private */
-      // IO[Unit] returns Unit, but the side effect is calling insertEmail
-      client.insertIntoDatabase("test@gmail.com").unsafeRunSync()
+      // Act - Call addToDatabase which doesn't print to console
+      val result = client.addToDatabase("test@gmail.com").unsafeRunSync()
 
-      // Assert - Verify the database method was called
-      /* (Note: With scalamock stubs, if the stub wasn't called with the right
-      * params, */
-      // it would have thrown an exception during the Future.successful check)
-      /* You could also verify by checking the stub was invoked if scalamock
-      * supports that */
+      // Assert - Verify the database insertion was successful
+      result ==> true
 
-    test("insertIntoDatabase handles database failure gracefully"):
+    test("addToDatabase handles database failure gracefully"):
       // Arrange
       val dbStub = stub[EmailDbManager]
       dbStub.insertEmail.returns(_ =>
@@ -73,11 +73,14 @@ class ClientTests extends utest.TestSuite, Stubs:
       val validatorStub = stub[ValidationService]
       val client        = Client(dbStub, validatorStub)
 
-      // Act & Assert - Should not throw, just print error message
-      client.insertIntoDatabase("test@gmail.com").unsafeRunSync()
+      // Act - addToDatabase returns false when insertion fails
+      val result = client.addToDatabase("test@gmail.com").unsafeRunSync()
+
+      // Assert - Verify failure is handled and returns false
+      result ==> false
 
     // Pattern 3: Testing validateEmail through the validation service
-    test("validateEmail returns Valid for successful validation"):
+    test("validate returns Valid for successful validation"):
       // Arrange
       val dbStub        = stub[EmailDbManager]
       val validatorStub = stub[ValidationService]
@@ -90,7 +93,7 @@ class ClientTests extends utest.TestSuite, Stubs:
       val result = validatorStub.validate("test@gmail.com")
 
       // Assert
-      assertEquals(result, ValidationStatus.Valid)
+      result ==> ValidationStatus.Valid
 
     test("validateEmail returns InvalidDomain for unacceptable domains"):
       // Arrange
@@ -104,7 +107,7 @@ class ClientTests extends utest.TestSuite, Stubs:
       val result = validatorStub.validate("test@badhost.com")
 
       // Assert
-      assertEquals(result, ValidationStatus.InvalidDomain)
+      result ==> ValidationStatus.InvalidDomain
 
     test("validateEmail returns ConnectionError when service is unreachable"):
       // Arrange
@@ -116,6 +119,6 @@ class ClientTests extends utest.TestSuite, Stubs:
       val result = validatorStub.validate("test@gmail.com")
 
       // Assert
-      assertEquals(result, ValidationStatus.ConnectionError)
-  )
+      result ==> ValidationStatus.ConnectionError
+
 end ClientTests

@@ -80,7 +80,7 @@ class ClientTests extends utest.TestSuite, Stubs:
       result ==> false
 
     // Pattern 3: Testing validateEmail through the validation service
-    test("validate returns Valid for successful validation"):
+    test("validateEmail returns Valid for successful validation"):
       // Arrange
       val dbStub        = stub[EmailDbManager]
       val validatorStub = stub[ValidationService]
@@ -90,7 +90,7 @@ class ClientTests extends utest.TestSuite, Stubs:
       val client = Client(dbStub, validatorStub)
 
       // Act - Test the validation logic
-      val result = validatorStub.validate("test@gmail.com")
+      val result = client.validateEmail("test@gmail.com").unsafeRunSync()
 
       // Assert
       result ==> ValidationStatus.Valid
@@ -102,9 +102,10 @@ class ClientTests extends utest.TestSuite, Stubs:
       validatorStub.validate.returns:
         case "test@badhost.com" => ValidationStatus.InvalidDomain
         case _                  => ValidationStatus.Valid
+      val client = Client(dbStub, validatorStub)
 
-      // Act
-      val result = validatorStub.validate("test@badhost.com")
+      // Act - Test the client's validation logic
+      val result = client.validateEmail("test@badhost.com").unsafeRunSync()
 
       // Assert
       result ==> ValidationStatus.InvalidDomain
@@ -114,9 +115,10 @@ class ClientTests extends utest.TestSuite, Stubs:
       val dbStub        = stub[EmailDbManager]
       val validatorStub = stub[ValidationService]
       validatorStub.validate.returns(_ => ValidationStatus.ConnectionError)
+      val client = Client(dbStub, validatorStub)
 
-      // Act
-      val result = validatorStub.validate("test@gmail.com")
+      // Act - Test the client's validation logic
+      val result = client.validateEmail("test@gmail.com").unsafeRunSync()
 
       // Assert
       result ==> ValidationStatus.ConnectionError

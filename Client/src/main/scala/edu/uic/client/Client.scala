@@ -68,7 +68,7 @@ class Client(
           yield ()
     yield ()
 
-  private def validateEmail(email: String): IO[ValidationStatus] =
+  private[client] def validateEmail(email: String): IO[ValidationStatus] =
     IO.pure(validationService.validate(email))
 
   private[client] def addToDatabase(email: String): IO[Boolean] =
